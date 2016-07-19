@@ -42,3 +42,6 @@ celt/arm/celt_neon_intr.c
 CELT_SOURCES_ARM_NE10= \
 celt/arm/celt_ne10_fft.c \
 celt/arm/celt_ne10_mdct.c
+
+CELT_SOURCES_ALTIVEC = \
+celt/ppc/pitch_altivec.c

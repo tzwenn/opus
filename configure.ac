@@ -336,7 +336,7 @@ AS_IF([test x"${enable_asm}" = x"yes"],[
                 asm_optimization="(missing perl dependency for ARM)"
             ])
         ])
-        ;;
+		;;
     esac
 ],[
    inline_optimization="disabled"
@@ -352,6 +352,8 @@ AM_CONDITIONAL([HAVE_SSE], [false])
 AM_CONDITIONAL([HAVE_SSE2], [false])
 AM_CONDITIONAL([HAVE_SSE4_1], [false])
 AM_CONDITIONAL([HAVE_AVX], [false])
+
+AM_CONDITIONAL([HAVE_ALTIVEC], [false])
 
 m4_define([DEFAULT_X86_SSE_CFLAGS], [-msse])
 m4_define([DEFAULT_X86_SSE2_CFLAGS], [-msse2])
@@ -370,17 +372,22 @@ AS_CASE([$host],
         [arm*eabi*], [AS_VAR_SET([RESOLVED_DEFAULT_ARM_NEON_INTR_CFLAGS], "DEFAULT_ARM_NEON_SOFTFP_INTR_CFLAGS")],
         [AS_VAR_SET([RESOLVED_DEFAULT_ARM_NEON_INTR_CFLAGS], "DEFAULT_ARM_NEON_INTR_CFLAGS")])
 
+m4_define([DEFAULT_PPC_ALTIVEC_CFLAGS], [-maltivec])
+
 AC_ARG_VAR([X86_SSE_CFLAGS], [C compiler flags to compile SSE intrinsics @<:@default=]DEFAULT_X86_SSE_CFLAGS[@:>@])
 AC_ARG_VAR([X86_SSE2_CFLAGS], [C compiler flags to compile SSE2 intrinsics @<:@default=]DEFAULT_X86_SSE2_CFLAGS[@:>@])
 AC_ARG_VAR([X86_SSE4_1_CFLAGS], [C compiler flags to compile SSE4.1 intrinsics @<:@default=]DEFAULT_X86_SSE4_1_CFLAGS[@:>@])
 AC_ARG_VAR([X86_AVX_CFLAGS], [C compiler flags to compile AVX intrinsics @<:@default=]DEFAULT_X86_AVX_CFLAGS[@:>@])
 AC_ARG_VAR([ARM_NEON_INTR_CFLAGS], [C compiler flags to compile ARM NEON intrinsics @<:@default=]DEFAULT_ARM_NEON_INTR_CFLAGS / DEFAULT_ARM_NEON_SOFTFP_INTR_CFLAGS[@:>@])
+AC_ARG_VAR([PPC_ALTIVEC_CFLAGS], [C compiler flags to compile Power AltiVec intrinsics @<:@default=]DEFAULT_PPC_ALTIVEC_CFLAGS[@:>@])
 
 AS_VAR_SET_IF([X86_SSE_CFLAGS], [], [AS_VAR_SET([X86_SSE_CFLAGS], "DEFAULT_X86_SSE_CFLAGS")])
 AS_VAR_SET_IF([X86_SSE2_CFLAGS], [], [AS_VAR_SET([X86_SSE2_CFLAGS], "DEFAULT_X86_SSE2_CFLAGS")])
 AS_VAR_SET_IF([X86_SSE4_1_CFLAGS], [], [AS_VAR_SET([X86_SSE4_1_CFLAGS], "DEFAULT_X86_SSE4_1_CFLAGS")])
 AS_VAR_SET_IF([X86_AVX_CFLAGS], [], [AS_VAR_SET([X86_AVX_CFLAGS], "DEFAULT_X86_AVX_CFLAGS")])
 AS_VAR_SET_IF([ARM_NEON_INTR_CFLAGS], [], [AS_VAR_SET([ARM_NEON_INTR_CFLAGS], ["$RESOLVED_DEFAULT_ARM_NEON_INTR_CFLAGS"])])
+AS_VAR_SET_IF([PPC_ALTIVEC_CFLAGS], [], [AS_VAR_SET([PPC_ALTIVEC_CFLAGS], "DEFAULT_PPC_ALTIVEC_CFLAGS")])
+
 
 AC_DEFUN([OPUS_PATH_NE10],
    [
@@ -533,6 +540,32 @@ AS_IF([test x"$enable_intrinsics" = x"yes"],[
          intrinsics_support=no
       ])
    ],
+   [powerpc*],
+   [
+	  OPUS_CHECK_INTRINSICS(
+		 [AltiVec],
+		 [$PPC_ALTIVEC_CFLAGS],
+		 [OPUS_PPC_MAY_HAVE_ALTIVEC],
+		 [OPUS_PPC_PRESUME_ALTIVEC],
+		 [[#include <altivec.h>
+		 ]],
+		 [[
+			 vector float vtest1 = {1, 2, 3, 4};
+			 vector float vtest2 = {4, 3, 2, 1};
+			 vector float expected = {5, 5, 5, 5};
+
+			 return vec_all_eq(vec_add(vtest1, vtest2), expected);
+		 ]]
+	   )
+	   AS_IF([test x"$OPUS_PPC_MAY_HAVE_ALTIVEC" = x"1"],
+		   [
+			  intrinsics_support="AltiVec"
+			  OPUS_PPC_ALTIVEC_CFLAGS="$PPC_ALTIVEC_CFLAGS"
+			  AC_DEFINE([OPUS_PPC_MAY_HAVE_ALTIVEC], 1, [Compiler supports Power AltiVec Intrinsics])
+			  AC_SUBST([OPUS_PPC_ALTIVEC_CFLAGS])
+		   ]
+	   )
+   ],
    [i?86|x86_64],
    [
       OPUS_CHECK_INTRINSICS(
@@ -552,7 +585,7 @@ AS_IF([test x"$enable_intrinsics" = x"yes"],[
       )
       AS_IF([test x"$OPUS_X86_MAY_HAVE_SSE" = x"1" && test x"$OPUS_X86_PRESUME_SSE" != x"1"],
           [
-             OPUS_X86_SSE_CFLAGS="$X86_SSE_CFLAGS"
+			 OPUS_X86_SSE_CFLAGS="$X86_SSE_CFLAGS"
              AC_SUBST([OPUS_X86_SSE_CFLAGS])
           ]
       )
@@ -601,7 +634,7 @@ AS_IF([test x"$enable_intrinsics" = x"yes"],[
       OPUS_CHECK_INTRINSICS(
          [AVX],
          [$X86_AVX_CFLAGS],
-         [OPUS_X86_MAY_HAVE_AVX],
+		 [OPUS_X86_MAY_HAVE_AVX],
          [OPUS_X86_PRESUME_AVX],
          [[#include <immintrin.h>
            #include <time.h>
@@ -671,7 +704,7 @@ AS_IF([test x"$enable_intrinsics" = x"yes"],[
             AC_MSG_WARN([Compiler does not support AVX intrinsics])
          ])
 
-         AS_IF([test x"$intrinsics_support" = x""],
+		 AS_IF([test x"$intrinsics_support" = x""],
             [intrinsics_support=no],
             [intrinsics_support="x86$intrinsics_support"]
          )
@@ -739,6 +772,8 @@ AM_CONDITIONAL([HAVE_SSE4_1],
     [test x"$OPUS_X86_MAY_HAVE_SSE4_1" = x"1"])
 AM_CONDITIONAL([HAVE_AVX],
     [test x"$OPUS_X86_MAY_HAVE_AVX" = x"1"])
+AM_CONDITIONAL([HAVE_ALTIVEC],
+	[test x"$OPUS_PPC_MAY_HAVE_ALTIVEC" = x"1"])
 
 AS_IF([test x"$enable_rtcd" = x"yes"],[
     AS_IF([test x"$rtcd_support" != x"no"],[
@@ -863,6 +898,7 @@ AC_MSG_NOTICE([
 
       API documentation: ............. ${enable_doc}
       Extra programs: ................ ${enable_extra_programs}
+
 ------------------------------------------------------------------------
 
  Type "make; make install" to compile and install
