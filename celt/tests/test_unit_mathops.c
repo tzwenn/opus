@@ -75,6 +75,8 @@
 #  endif
 # endif
 # include "arm/arm_celt_map.c"
+#elif defined(OPUS_PPC_MAY_HAVE_ALTIVEC)
+# include "ppc/pitch_altivec.c"
 #endif
 
 #ifdef FIXED_POINT

@@ -48,5 +48,6 @@ celt/mips/kiss_fft_mipsr1.h \
 celt/mips/mdct_mipsr1.h \
 celt/mips/pitch_mipsr1.h \
 celt/mips/vq_mipsr1.h \
+celt/ppc/pitch_altivec.h \
 celt/x86/pitch_sse.h \
 celt/x86/x86cpu.h

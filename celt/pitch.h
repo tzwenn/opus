@@ -42,6 +42,10 @@
 #include "x86/pitch_sse.h"
 #endif
 
+#ifdef OPUS_PPC_MAY_HAVE_ALTIVEC
+#include "ppc/pitch_altivec.h"
+#endif
+
 #if defined(MIPSr1_ASM)
 #include "mips/pitch_mipsr1.h"
 #endif
