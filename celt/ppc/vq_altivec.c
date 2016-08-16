@@ -34,6 +34,12 @@
 #include "vq.h"
 #include "pitch.h"
 
+#ifdef __powerpc64__
+#  ifndef OPUS_PPC_MAY_HAVE_ALTIVEC
+#    define OPUS_PPC_MAY_HAVE_ALTIVEC 1
+#  endif
+#endif
+
 #ifdef OPUS_PPC_MAY_HAVE_ALTIVEC
 
 #include <altivec.h>
@@ -43,19 +49,18 @@
 void renormalise_vector_altivec(celt_norm *X, int N, opus_val16 gain, int arch)
 {
 	int i;
-	opus_val32 E;
-	opus_val16 g;
-	opus_val32 t;
-	celt_norm *xptr;
-	E = EPSILON + celt_inner_prod(X, X, N, arch);
-	t = VSHR32(E, 2*(k-7));
-	g = MULT16_16_P15(celt_rsqrt_norm(t),gain);
+	opus_val32 E = EPSILON + celt_inner_prod(X, X, N, arch);
+	opus_val16 g = celt_rsqrt_norm(E) * gain;
+	vector float gv = {g, g, g, g};
 
-	xptr = X;
-	for (i=0;i<N;i++)
+	for (i = 0; i < N - 3; i += 4)
 	{
-	   *xptr = EXTRACT16(PSHR32(MULT16_16(g, *xptr), k+1));
-	   xptr++;
+		vector float xv = *((vector float *)(&X[i]));
+		*((vector float *)&X[i]) = vec_mul(gv, xv);
+	}
+
+	for (; i < N; i++) {
+		X[i] = MULT16_16(g, X[i]);
 	}
 }
 

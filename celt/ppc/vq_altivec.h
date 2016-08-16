@@ -35,11 +35,9 @@
 
 
 #ifndef FIXED_POINT
-
 #define OVERRIDE_renormalise_vector
 #define renormalise_vector(X, N, gain, arch) \
  (renormalise_vector_altivec(X, N, gain, arch))
-
 #endif
 
 
