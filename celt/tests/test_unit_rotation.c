@@ -75,6 +75,7 @@
 # include "arm/arm_celt_map.c"
 #elif defined(OPUS_PPC_MAY_HAVE_ALTIVEC)
 # include "ppc/pitch_altivec.c"
+# include "ppc/vq_altivec.c"
 #endif
 
 #define MAX_SIZE 100

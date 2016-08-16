@@ -41,6 +41,9 @@
 #include "mips/vq_mipsr1.h"
 #endif
 
+#ifdef OPUS_PPC_MAY_HAVE_ALTIVEC
+#include "ppc/vq_altivec.h"
+#endif
 
 /** Algebraic pulse-vector quantiser. The signal x is replaced by the sum of
   * the pitch and a combination of pulses such that its norm is still equal

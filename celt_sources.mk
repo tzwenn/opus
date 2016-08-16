@@ -44,4 +44,5 @@ celt/arm/celt_ne10_fft.c \
 celt/arm/celt_ne10_mdct.c
 
 CELT_SOURCES_ALTIVEC = \
-celt/ppc/pitch_altivec.c
+celt/ppc/pitch_altivec.c \
+celt/ppc/vq_altivec.c
