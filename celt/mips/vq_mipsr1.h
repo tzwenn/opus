@@ -41,6 +41,8 @@ static void normalise_residual(int * OPUS_RESTRICT iy, celt_norm * OPUS_RESTRICT
 static void exp_rotation(celt_norm *X, int len, int dir, int stride, int K, int spread);
 static void renormalise_vector_mips(celt_norm *X, int N, opus_val16 gain, int arch);
 
+#ifdef NEED_vq_exp_rotation 1
+
 #define OVERRIDE_vq_exp_rotation1
 static void exp_rotation1(celt_norm *X, int len, int stride, opus_val16 c, opus_val16 s)
 {
@@ -67,6 +69,8 @@ static void exp_rotation1(celt_norm *X, int len, int stride, opus_val16 c, opus_
       *Xptr--      = EXTRACT16(PSHR32(MAC16_16(MULT16_16(c, x1), ms, x2), 15));
    }
 }
+
+#endif // NEED_vq_exp_rotation
 
 #define OVERRIDE_renormalise_vector
 

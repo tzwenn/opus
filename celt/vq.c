@@ -32,7 +32,10 @@
 
 #include "mathops.h"
 #include "cwrs.h"
+
+#define NEED_vq_exp_rotation 1
 #include "vq.h"
+
 #include "arch.h"
 #include "os_support.h"
 #include "bands.h"
