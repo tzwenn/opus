@@ -39,7 +39,7 @@
 
 vector float vec_loadUnaligned(const float *data)
 {
-#if _ARCH_PWR8 && defined(__IBMC__)
+#if _ARCH_PWR8 && defined(__xlc__)
 	return vec_xlw4(0, data);
 #else
 	return *((vector float *) data);
@@ -50,8 +50,6 @@ void vec_storeUnaligned(float *target, vector float value)
 {
 	*((vector float *) target) = value;
 }
-
-#if !defined(__IBMC__)
 
 #define extract_field(a, oct_field, offset) (unsigned char)((((a) >> ((oct_field) * 3)) & 7) * 4 + (offset))
 
@@ -66,7 +64,6 @@ vector unsigned char vec_gpci(int a)
 	};
 	return mask;
 }
-#endif
 
 vector float vec_permEl(vector float a, vector float b, int pattern)
 {
@@ -94,19 +91,17 @@ void xcorr_kernel_altivec(const opus_val16 *x, const opus_val16 *y, opus_val32 s
 		vector float yj = vec_loadUnaligned(y + j);
 		vector float y3 = vec_loadUnaligned(y + j + 3);
 
-		xsum1 = vec_add(xsum1, vec_mul(vec_splat(x0, 0), yj));
-		xsum2 = vec_add(xsum2, vec_mul(vec_splat(x0, 1),
-									   vec_permEl(yj, y3, 01201)));
-		xsum1 = vec_add(xsum1, vec_mul(vec_splat(x0, 2),
-									   vec_permEl(yj, y3, 02312)));
-		xsum2 = vec_add(xsum2, vec_mul(vec_splat(x0, 3), y3));
+		xsum1 = vec_madd(vec_splat(x0, 0), yj,                        xsum1);
+		xsum2 = vec_madd(vec_splat(x0, 1), vec_permEl(yj, y3, 01201), xsum2);
+		xsum1 = vec_madd(vec_splat(x0, 2), vec_permEl(yj, y3, 02312), xsum1);
+		xsum2 = vec_madd(vec_splat(x0, 3), y3,                        xsum2);
 	}
 	if (j < len) {
-		xsum1 = vec_add(xsum1, vec_mul(vec_splatf(x[j]), vec_loadUnaligned(y+j)));
+		xsum1 = vec_madd(vec_splatf(x[j]), vec_loadUnaligned(y+j), xsum1);
 		if (++j < len) {
-			xsum2 = vec_add(xsum2, vec_mul(vec_splatf(x[j]), vec_loadUnaligned(y+j)));
+			xsum2 = vec_madd(vec_splatf(x[j]), vec_loadUnaligned(y+j), xsum2);
 			if (++j < len) {
-				xsum1 = vec_add(xsum1, vec_mul(vec_splatf(x[j]), vec_loadUnaligned(y+j)));
+				xsum1 = vec_madd(vec_splatf(x[j]), vec_loadUnaligned(y+j), xsum1);
 			}
 		}
 	}
