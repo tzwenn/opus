@@ -174,16 +174,10 @@ void comb_filter_const_altivec(opus_val32 *y, opus_val32 *x, int T, int N,
 		const opus_val32 *xp = &x[i-T-2];
 		vector float yi = vec_loadUnaligned(x + i);
 		vector float x4v = vec_loadUnaligned(xp + 4);
-#if 1
-		vector float x1v = vec_loadUnaligned(xp + 1);
-		vector float x2v = vec_loadUnaligned(xp + 2);
-		vector float x3v = vec_loadUnaligned(xp + 3);
-#else
-		//FIXME: Not working (yet)
-		vector float x2v = vec_permEl(x0v, x4v, 02301);
-		vector float x1v = vec_permEl(x0v, x2v, 01212);
-		vector float x3v = vec_permEl(x2v, x4v, 01212);
-#endif
+
+		vector float x1v = vec_permEl(x0v, x4v, 01234);
+		vector float x2v = vec_permEl(x0v, x4v, 02345);
+		vector float x3v = vec_permEl(x0v, x4v, 03456);
 
 		yi = vec_madd(g10v, x2v, yi);
 		yi = vec_madd(g11v, vec_add(x3v, x1v), yi);
